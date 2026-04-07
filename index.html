@@ -228,7 +228,7 @@
         const totalNeeded = (boss === '闇黑龍王' ? 12 : 6);
         
         const hasHB = selectedJobs.includes("黑騎士");
-        const hasSE = selectedJobs.some(j => ["神射手", "箭神"].includes(j));
+        const hasSE = selectedJobs.some(j => ["弓", "弩"].includes(j));
         const hasHaste = selectedJobs.some(j => ["鏢賊", "刀賊"].includes(j));
         const mageCount = selectedJobs.filter(j => ["火毒", "冰雷", "主教"].includes(j)).length;
 
@@ -236,7 +236,7 @@
 
         if (selectedJobs.length >= totalNeeded) {
             suggestionBox.classList.add('success-box');
-            suggestionText.innerHTML = `<strong>✅ 第 ${g} 團 組隊完成！</strong><br>📅 開打時間：${time}<br>💊 藥水與櫻桃派請準備好！`;
+            suggestionText.innerHTML = `<strong> 第 ${g} 團 組隊完成！</strong><br> 開打時間：${time}<br> 藥水與櫻桃派請準備好！`;
         } else {
             let advice = [];
             if (!hasHB) advice.push("黑騎士(火)");
@@ -249,6 +249,65 @@
             let remaining = totalNeeded - selectedJobs.length;
             let adviceStr = advice.length > 0 ? "建議補： " + advice.join("、") : "核心職業 OK";
             suggestionText.innerHTML = `💡 第 ${g} 團還差 ${remaining} 人<br>${adviceStr}`;
+        }
+    }
+// --- 暫存功能區 ---
+    
+    function saveData() {
+        const data = {
+            boss: document.getElementById('bossSelect').value,
+            teamCount: document.getElementById('teamCountSelect').value,
+            groups: []
+        };
+
+        const groupCards = document.querySelectorAll('.team-group-card');
+        groupCards.forEach((card, index) => {
+            const gIdx = index + 1;
+            const groupData = {
+                time: card.querySelector('.group-time').value,
+                jobs: Array.from(document.querySelectorAll(`.job-select-${gIdx}`)).map(s => s.value),
+                names: Array.from(document.querySelectorAll(`.name-input-${gIdx}`)).map(i => i.value)
+            };
+            data.groups.push(groupData);
+        });
+
+        localStorage.setItem('artale_raid_data', JSON.stringify(data));
+    }
+
+    function loadData() {
+        const saved = localStorage.getItem('artale_raid_data');
+        if (!saved) return;
+
+        const data = JSON.parse(saved);
+        document.getElementById('bossSelect').value = data.boss;
+        document.getElementById('teamCountSelect').value = data.teamCount;
+
+        // 重建 HTML 結構
+        initTeams();
+
+        // 填回詳細資料
+        data.groups.forEach((groupData, gIdx) => {
+            const gNum = gIdx + 1;
+            const timeInput = document.querySelector(`#group-${gNum} .group-time`);
+            if (timeInput) timeInput.value = groupData.time;
+
+            const selects = document.querySelectorAll(`.job-select-${gNum}`);
+            const names = document.querySelectorAll(`.name-input-${gNum}`);
+
+            groupData.jobs.forEach((job, jIdx) => {
+                if (selects[jIdx]) selects[jIdx].value = job;
+            });
+            groupData.names.forEach((name, nIdx) => {
+                if (names[nIdx]) names[nIdx].value = name;
+            });
+            calculateSpecificGroup(gNum);
+        });
+    }
+
+    function clearAllData() {
+        if (confirm("確定要清空所有已填寫的名單嗎？")) {
+            localStorage.removeItem('artale_raid_data');
+            location.reload();
         }
     }
 </script>
