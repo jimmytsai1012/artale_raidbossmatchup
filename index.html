@@ -251,65 +251,65 @@
             suggestionText.innerHTML = `💡 第 ${g} 團還差 ${remaining} 人<br>${adviceStr}`;
         }
     }
-// --- 暫存功能區 ---
+    // --- 暫存功能區 ---
     
-    function saveData() {
-        const data = {
-            boss: document.getElementById('bossSelect').value,
-            teamCount: document.getElementById('teamCountSelect').value,
-            groups: []
-        };
-
-        const groupCards = document.querySelectorAll('.team-group-card');
-        groupCards.forEach((card, index) => {
-            const gIdx = index + 1;
-            const groupData = {
-                time: card.querySelector('.group-time').value,
-                jobs: Array.from(document.querySelectorAll(`.job-select-${gIdx}`)).map(s => s.value),
-                names: Array.from(document.querySelectorAll(`.name-input-${gIdx}`)).map(i => i.value)
+        function saveData() {
+            const data = {
+                boss: document.getElementById('bossSelect').value,
+                teamCount: document.getElementById('teamCountSelect').value,
+                groups: []
             };
-            data.groups.push(groupData);
-        });
 
-        localStorage.setItem('artale_raid_data', JSON.stringify(data));
-    }
+            const groupCards = document.querySelectorAll('.team-group-card');
+            groupCards.forEach((card, index) => {
+                const gIdx = index + 1;
+                const groupData = {
+                    time: card.querySelector('.group-time').value,
+                    jobs: Array.from(document.querySelectorAll(`.job-select-${gIdx}`)).map(s => s.value),
+                    names: Array.from(document.querySelectorAll(`.name-input-${gIdx}`)).map(i => i.value)
+                };
+                data.groups.push(groupData);
+            });
 
-    function loadData() {
-        const saved = localStorage.getItem('artale_raid_data');
-        if (!saved) return;
+            localStorage.setItem('artale_raid_data', JSON.stringify(data));
+        }
 
-        const data = JSON.parse(saved);
-        document.getElementById('bossSelect').value = data.boss;
-        document.getElementById('teamCountSelect').value = data.teamCount;
+            function loadData() {
+            const saved = localStorage.getItem('artale_raid_data');
+            if (!saved) return;
+
+            const data = JSON.parse(saved);
+            document.getElementById('bossSelect').value = data.boss;
+            document.getElementById('teamCountSelect').value = data.teamCount;
 
         // 重建 HTML 結構
-        initTeams();
+            initTeams();
 
         // 填回詳細資料
-        data.groups.forEach((groupData, gIdx) => {
-            const gNum = gIdx + 1;
-            const timeInput = document.querySelector(`#group-${gNum} .group-time`);
-            if (timeInput) timeInput.value = groupData.time;
+            data.groups.forEach((groupData, gIdx) => {
+                const gNum = gIdx + 1;
+                const timeInput = document.querySelector(`#group-${gNum} .group-time`);
+                if (timeInput) timeInput.value = groupData.time;
 
-            const selects = document.querySelectorAll(`.job-select-${gNum}`);
-            const names = document.querySelectorAll(`.name-input-${gNum}`);
+                const selects = document.querySelectorAll(`.job-select-${gNum}`);
+                const names = document.querySelectorAll(`.name-input-${gNum}`);
 
-            groupData.jobs.forEach((job, jIdx) => {
-                if (selects[jIdx]) selects[jIdx].value = job;
+                groupData.jobs.forEach((job, jIdx) => {
+                    if (selects[jIdx]) selects[jIdx].value = job;
+                });
+                groupData.names.forEach((name, nIdx) => {
+                    if (names[nIdx]) names[nIdx].value = name;
+                });
+                calculateSpecificGroup(gNum);
             });
-            groupData.names.forEach((name, nIdx) => {
-                if (names[nIdx]) names[nIdx].value = name;
-            });
-            calculateSpecificGroup(gNum);
-        });
-    }
-
-    function clearAllData() {
-        if (confirm("確定要清空所有已填寫的名單嗎？")) {
-            localStorage.removeItem('artale_raid_data');
-            location.reload();
         }
-    }
+
+        function clearAllData() {
+            if (confirm("確定要清空所有已填寫的名單嗎？")) {
+                localStorage.removeItem('artale_raid_data');
+                location.reload();
+            }
+          }
 </script>
 
 </body>
