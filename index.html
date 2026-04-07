@@ -118,24 +118,31 @@
 <body>
 
 <div class="container">
-    <h1>🍁 Artale 組隊系統</h1>
+    <h1>Artale 組隊系統</h1>
 
     <div class="setup-section">
         <div class="setup-item">
             <label>選擇首領</label>
             <select id="bossSelect" onchange="initTeams()">
                 <option value="">-- 請選擇 --</option>
-                <option value="殘暴炎魔">殘暴炎魔 (6人)</option>
-                <option value="困難拉圖斯">困難拉圖斯 (6人)</option>
-                <option value="闇黑龍王">闇黑龍王 (12人)</option>
+                <option value="殘暴炎魔">殘暴炎魔 </option>
+                <option value="困難拉圖斯">困難拉圖斯</option>
+                <option value="闇黑龍王">闇黑龍王</option>
             </select>
         </div>
         <div class="setup-item">
-            <label>總共要開幾團？</label>
+            <label>開團數量</label>
             <select id="teamCountSelect" onchange="initTeams()">
                 <option value="1">1 團</option>
                 <option value="2">2 團</option>
                 <option value="3">3 團</option>
+                <option value="4">4 團</option>
+                <option value="5">5 團</option>
+                <option value="6">6 團</option>
+                <option value="7">7 團</option>
+                <option value="8">8 團</option>
+                <option value="9">9 團</option>
+                <option value="10">10 團</option>
             </select>
         </div>
     </div>
@@ -148,7 +155,7 @@
 <script>
     const jobs = [
         { name: "英雄", buff: "" }, { name: "聖騎士", buff: "" }, { name: "黑騎士", buff: " (火)" },
-        { name: "神射手", buff: " (眼)" }, { name: "箭神", buff: " (眼)" },
+        { name: "弩", buff: " (眼)" }, { name: "弓", buff: " (眼)" },
         { name: "鏢賊", buff: " (速)" }, { name: "刀賊", buff: " (速)" },
         { name: "槍神", buff: "" }, { name: "拳霸", buff: " (極速)" },
         { name: "火毒", buff: "" }, { name: "冰雷", buff: "" }, { name: "主教", buff: " (祈禱)" }
@@ -236,8 +243,8 @@
             if (!hasSE) advice.push("弓箭手(眼)");
             if (!hasHaste) advice.push("盜賊(速)");
             
-            if (boss === "殘暴炎魔" && mageCount < 1) advice.push("法師(1)");
-            if (boss === "困難拉圖斯" && mageCount < 2) advice.push("法師(2)");
+            if (boss === "殘暴炎魔" && mageCount < 1) advice.push("法師1位)");
+            if (boss === "困難拉圖斯" && mageCount < 2) advice.push("法師2位)");
 
             let remaining = totalNeeded - selectedJobs.length;
             let adviceStr = advice.length > 0 ? "建議補： " + advice.join("、") : "核心職業 OK";
