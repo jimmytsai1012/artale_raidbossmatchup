@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>楓之谷組隊打王系統</title>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f4f7f6; padding: 20px; color: #333; }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .section { margin-bottom: 20px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; }
+        label { font-weight: bold; display: block; margin-bottom: 8px; }
+        select, input { padding: 8px; border-radius: 4px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; }
+        .member-row { display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .suggestion-box { background-color: #e8f4fd; border-left: 5px solid #3498db; padding: 15px; margin-top: 20px; }
+        .buff-tag { color: #e67e22; font-size: 0.85em; font-weight: bold; }
+        .team-title { background: #34495e; color: white; padding: 5px 10px; border-radius: 4px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🍁 楓之谷組隊系統</h1>
+
+    <div class="section">
+        <label for="bossSelect">選擇挑戰的首領：</label>
+        <select id="bossSelect" onchange="initTeams()">
+            <option value="">-- 請選擇 --</option>
+            <option value="zakum">殘暴炎魔 (6人)</option>
+            <option value="papulatus">困難拉圖斯 (6人)</option>
+            <option value="horntail">闇黑龍王 (12人 / 2隊)</option>
+        </select>
+    </div>
+
+    <div id="teamContainer"></div>
+
+    <div id="suggestion" class="suggestion-box" style="display:none;">
+        <strong>💡 系統組隊建議：</strong>
+        <p id="suggestionText"></p>
+    </div>
+</div>
+
+<script>
+    const jobs = [
+        { name: "英雄", type: "physical", buff: "" },
+        { name: "聖騎士", type: "physical", buff: "" },
+        { name: "黑騎士", type: "physical", buff: " (火)" },
+        { name: "神射手", type: "physical", buff: " (眼)" },
+        { name: "箭神", type: "physical", buff: " (眼)" },
+        { name: "鏢賊", type: "physical", buff: " (速)" },
+        { name: "刀賊", type: "physical", buff: " (速)" },
+        { name: "槍神", type: "physical", buff: "" },
+        { name: "拳霸", type: "physical", buff: " (極速)" },
+        { name: "火毒", type: "magic", buff: "" },
+        { name: "冰雷", type: "magic", buff: "" },
+        { name: "主教", type: "magic", buff: " (祈禱)" }
+    ];
+
+    function initTeams() {
+        const boss = document.getElementById('bossSelect').value;
+        const container = document.getElementById('teamContainer');
+        const suggestion = document.getElementById('suggestion');
+        container.innerHTML = "";
+        suggestion.style.display = "none";
+
+        if (!boss) return;
+
+        let totalMembers = boss === 'horntail' ? 12 : 6;
+        let teams = boss === 'horntail' ? 2 : 1;
+
+        for (let t = 1; t <= teams; t++) {
+            let teamDiv = document.createElement('div');
+            teamDiv.className = "section";
+            teamDiv.innerHTML = `<div class="team-title">隊伍 ${t}</div>`;
+            
+            let membersPerTeam = totalMembers / teams;
+            for (let i = 1; i <= membersPerTeam; i++) {
+                teamDiv.innerHTML += `
+                    <div class="member-row">
+                        <select class="job-select" onchange="calculateSuggestion()">
+                            <option value="">-- 選擇職業 --</option>
+                            ${jobs.map(j => `<option value="${j.name}">${j.name}${j.buff}</option>`).join('')}
+                        </select>
+                        <input type="text" placeholder="成員名稱">
+                        <input type="date">
+                    </div>
+                `;
+            }
+            container.appendChild(teamDiv);
+        }
+        calculateSuggestion();
+    }
+
+    function calculateSuggestion() {
+        const boss = document.getElementById('bossSelect').value;
+        const selects = document.querySelectorAll('.job-select');
+        const suggestion = document.getElementById('suggestion');
+        const suggestionText = document.getElementById('suggestionText');
+        
+        let selectedJobs = [];
+        selects.forEach(s => { if(s.value) selectedJobs.push(s.value); });
+
+        if (selectedJobs.length === 0) {
+            suggestion.style.display = "none";
+            return;
+        }
+
+        suggestion.style.display = "block";
+        let advice = [];
+
+        // 檢查基礎 Buff 狀態
+        const hasHB = selectedJobs.includes("黑騎士"); // 火
+        const hasSE = selectedJobs.some(j => ["神射手", "箭神"].includes(j)); // 眼
+        const hasHaste = selectedJobs.some(j => ["鏢賊", "刀賊"].includes(j)); // 速
+        const hasSI = selectedJobs.includes("拳霸"); // 極速
+        const mageCount = selectedJobs.filter(j => ["火毒", "冰雷", "主教"].includes(j)).length;
+
+        // 核心邏輯
+        if (boss === 'zakum' || boss === 'papulatus') {
+            if (!hasHB) advice.push("黑騎士(火)");
+            if (!hasSE) advice.push("弓箭手(眼)");
+            if (!hasHaste) advice.push("盜賊(速)");
+
+            let minMage = (boss === 'zakum') ? 1 : 2;
+            if (mageCount < minMage) advice.push(`${minMage - mageCount} 名法師`);
+
+            let remaining = 6 - selectedJobs.length - advice.length;
+            if (remaining > 0) advice.push(`${remaining} 名物理職業`);
+        } 
+        else if (boss === 'horntail') {
+            // 龍王特殊邏輯
+            if (hasSI) {
+                advice.push("建議搭配: 劍士、神射手、刀賊以發揮極速效益");
+            }
+            
+            if (!hasHB) advice.push("黑騎士(火)");
+            if (!hasSE) advice.push("弓箭手(眼)");
+            if (!hasHaste) advice.push("盜賊(速)");
+
+            let remaining = 12 - selectedJobs.length - advice.length;
+            if (remaining > 0) advice.push(`${remaining} 名打手 (物理或法師皆可)`);
+        }
+
+        suggestionText.innerHTML = advice.length > 0 ? advice.join("、") : "隊伍配置已達標！";
+    }
+</script>
+
+</body>
+</html>
