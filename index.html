@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Artale 組隊系統 </title>
+    <title>Artale 組隊編排</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -100,6 +100,17 @@
             color: #afffcf;
         }
 
+        .clear-btn {
+            background: #c0392b;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 0.8em;
+        }
+
         .dev-credit {
             position: fixed;
             right: 20px;
@@ -111,43 +122,39 @@
 
         @media (max-width: 850px) {
             .sub-team { min-width: 100%; }
-            .setup-section { flex-direction: column; align-items: center; }
         }
     </style>
 </head>
-<body>
+<body onload="loadData()">
 
 <div class="container">
-    <h1>Artale 組隊系統</h1>
+    <h1>🍁 Artale 組隊系統</h1>
 
     <div class="setup-section">
         <div class="setup-item">
             <label>選擇首領</label>
-            <select id="bossSelect" onchange="initTeams()">
+            <select id="bossSelect" onchange="initTeams(); saveData();">
                 <option value="">-- 請選擇 --</option>
-                <option value="殘暴炎魔">殘暴炎魔 </option>
-                <option value="困難拉圖斯">困難拉圖斯</option>
-                <option value="闇黑龍王">闇黑龍王</option>
+                <option value="殘暴炎魔">殘暴炎魔 (6人)</option>
+                <option value="困難拉圖斯">困難拉圖斯 (6人)</option>
+                <option value="闇黑龍王">闇黑龍王 (12人)</option>
             </select>
         </div>
         <div class="setup-item">
-            <label>開團數量</label>
-            <select id="teamCountSelect" onchange="initTeams()">
+            <label>總共要開幾團？</label>
+            <select id="teamCountSelect" onchange="initTeams(); saveData();">
                 <option value="1">1 團</option>
                 <option value="2">2 團</option>
                 <option value="3">3 團</option>
                 <option value="4">4 團</option>
                 <option value="5">5 團</option>
-                <option value="6">6 團</option>
-                <option value="7">7 團</option>
-                <option value="8">8 團</option>
-                <option value="9">9 團</option>
-                <option value="10">10 團</option>
             </select>
         </div>
     </div>
 
     <div id="mainContainer"></div>
+    
+    <button class="clear-btn" onclick="clearAllData()">🗑️ 清空所有存檔</button>
 </div>
 
 <div class="dev-credit">開發者：SUMMER公會</div>
@@ -155,7 +162,7 @@
 <script>
     const jobs = [
         { name: "英雄", buff: "" }, { name: "聖騎士", buff: "" }, { name: "黑騎士", buff: " (火)" },
-        { name: "弩", buff: " (眼)" }, { name: "弓", buff: " (眼)" },
+        { name: "弓", buff: " (眼)" }, { name: "弩", buff: " (眼)" },
         { name: "鏢賊", buff: " (速)" }, { name: "刀賊", buff: " (速)" },
         { name: "槍神", buff: "" }, { name: "拳霸", buff: " (極速)" },
         { name: "火毒", buff: "" }, { name: "冰雷", buff: "" }, { name: "主教", buff: " (祈禱)" }
@@ -178,7 +185,7 @@
                     <span class="group-title">第 ${g} 團 (${boss})</span>
                     <div style="max-width:300px; margin: 0 auto;">
                         <label style="font-size:0.8em;">本團預計開打時間</label>
-                        <input type="text" class="group-time" placeholder="例如：20:00" oninput="calculateSpecificGroup(${g})">
+                        <input type="text" class="group-time" placeholder="例如：20:00" oninput="calculateSpecificGroup(${g}); saveData();">
                     </div>
                 </div>
             `;
@@ -206,11 +213,11 @@
         for (let i = 1; i <= count; i++) {
             rows += `
                 <div class="member-row">
-                    <select class="job-select-${groupIndex}" onchange="calculateSpecificGroup(${groupIndex})">
+                    <select class="job-select-${groupIndex}" onchange="calculateSpecificGroup(${groupIndex}); saveData();">
                         <option value="">職業</option>
                         ${jobs.map(j => `<option value="${j.name}">${j.name}${j.buff}</option>`).join('')}
                     </select>
-                    <input type="text" placeholder="名稱">
+                    <input type="text" class="name-input-${groupIndex}" placeholder="名稱" oninput="saveData()">
                 </div>`;
         }
         return `<div class="sub-team"><span class="sub-team-title">隊伍 ${teamIndex}</span>${rows}</div>`;
@@ -218,12 +225,14 @@
 
     function calculateSpecificGroup(g) {
         const boss = document.getElementById('bossSelect').value;
-        const time = document.querySelector(`#group-${g} .group-time`).value || "未填寫";
+        const timeInput = document.querySelector(`#group-${g} .group-time`);
+        const time = timeInput ? timeInput.value : "未填寫";
         const selects = document.querySelectorAll(`.job-select-${g}`);
         const selectedJobs = Array.from(selects).map(s => s.value).filter(v => v);
         
         const suggestionText = document.getElementById(`suggestionText-${g}`);
         const suggestionBox = document.getElementById(`suggestion-${g}`);
+        if(!suggestionBox) return;
 
         const totalNeeded = (boss === '闇黑龍王' ? 12 : 6);
         
@@ -236,80 +245,80 @@
 
         if (selectedJobs.length >= totalNeeded) {
             suggestionBox.classList.add('success-box');
-            suggestionText.innerHTML = `<strong> 第 ${g} 團 組隊完成！</strong><br> 開打時間：${time}<br> 藥水與櫻桃派請準備好！`;
+            suggestionText.innerHTML = `<strong> 第 ${g} 團 組隊完成！</strong><br>開打時間：${time}<br>藥水與櫻桃派請準備好！`;
         } else {
             let advice = [];
             if (!hasHB) advice.push("黑騎士(火)");
             if (!hasSE) advice.push("弓箭手(眼)");
             if (!hasHaste) advice.push("盜賊(速)");
-            
-            if (boss === "殘暴炎魔" && mageCount < 1) advice.push("法師1位)");
-            if (boss === "困難拉圖斯" && mageCount < 2) advice.push("法師2位)");
+            if (boss === "殘暴炎魔" && mageCount < 1) advice.push("法師(1)");
+            if (boss === "困難拉圖斯" && mageCount < 2) advice.push("法師(2)");
 
             let remaining = totalNeeded - selectedJobs.length;
             let adviceStr = advice.length > 0 ? "建議補： " + advice.join("、") : "核心職業 OK";
             suggestionText.innerHTML = `💡 第 ${g} 團還差 ${remaining} 人<br>${adviceStr}`;
         }
     }
+
     // --- 暫存功能區 ---
     
-        function saveData() {
-            const data = {
-                boss: document.getElementById('bossSelect').value,
-                teamCount: document.getElementById('teamCountSelect').value,
-                groups: []
+    function saveData() {
+        const data = {
+            boss: document.getElementById('bossSelect').value,
+            teamCount: document.getElementById('teamCountSelect').value,
+            groups: []
+        };
+
+        const groupCards = document.querySelectorAll('.team-group-card');
+        groupCards.forEach((card, index) => {
+            const gIdx = index + 1;
+            const groupData = {
+                time: card.querySelector('.group-time').value,
+                jobs: Array.from(document.querySelectorAll(`.job-select-${gIdx}`)).map(s => s.value),
+                names: Array.from(document.querySelectorAll(`.name-input-${gIdx}`)).map(i => i.value)
             };
+            data.groups.push(groupData);
+        });
 
-            const groupCards = document.querySelectorAll('.team-group-card');
-            groupCards.forEach((card, index) => {
-                const gIdx = index + 1;
-                const groupData = {
-                    time: card.querySelector('.group-time').value,
-                    jobs: Array.from(document.querySelectorAll(`.job-select-${gIdx}`)).map(s => s.value),
-                    names: Array.from(document.querySelectorAll(`.name-input-${gIdx}`)).map(i => i.value)
-                };
-                data.groups.push(groupData);
-            });
+        localStorage.setItem('artale_raid_data', JSON.stringify(data));
+    }
 
-            localStorage.setItem('artale_raid_data', JSON.stringify(data));
-        }
+    function loadData() {
+        const saved = localStorage.getItem('artale_raid_data');
+        if (!saved) return;
 
-            function loadData() {
-            const saved = localStorage.getItem('artale_raid_data');
-            if (!saved) return;
-
-            const data = JSON.parse(saved);
-            document.getElementById('bossSelect').value = data.boss;
-            document.getElementById('teamCountSelect').value = data.teamCount;
+        const data = JSON.parse(saved);
+        document.getElementById('bossSelect').value = data.boss;
+        document.getElementById('teamCountSelect').value = data.teamCount;
 
         // 重建 HTML 結構
-            initTeams();
+        initTeams();
 
         // 填回詳細資料
-            data.groups.forEach((groupData, gIdx) => {
-                const gNum = gIdx + 1;
-                const timeInput = document.querySelector(`#group-${gNum} .group-time`);
-                if (timeInput) timeInput.value = groupData.time;
+        data.groups.forEach((groupData, gIdx) => {
+            const gNum = gIdx + 1;
+            const timeInput = document.querySelector(`#group-${gNum} .group-time`);
+            if (timeInput) timeInput.value = groupData.time;
 
-                const selects = document.querySelectorAll(`.job-select-${gNum}`);
-                const names = document.querySelectorAll(`.name-input-${gNum}`);
+            const selects = document.querySelectorAll(`.job-select-${gNum}`);
+            const names = document.querySelectorAll(`.name-input-${gNum}`);
 
-                groupData.jobs.forEach((job, jIdx) => {
-                    if (selects[jIdx]) selects[jIdx].value = job;
-                });
-                groupData.names.forEach((name, nIdx) => {
-                    if (names[nIdx]) names[nIdx].value = name;
-                });
-                calculateSpecificGroup(gNum);
+            groupData.jobs.forEach((job, jIdx) => {
+                if (selects[jIdx]) selects[jIdx].value = job;
             });
-        }
+            groupData.names.forEach((name, nIdx) => {
+                if (names[nIdx]) names[nIdx].value = name;
+            });
+            calculateSpecificGroup(gNum);
+        });
+    }
 
-        function clearAllData() {
-            if (confirm("確定要清空所有已填寫的名單嗎？")) {
-                localStorage.removeItem('artale_raid_data');
-                location.reload();
-            }
-          }
+    function clearAllData() {
+        if (confirm("確定要清空所有已填寫的名單嗎？")) {
+            localStorage.removeItem('artale_raid_data');
+            location.reload();
+        }
+    }
 </script>
 
 </body>
