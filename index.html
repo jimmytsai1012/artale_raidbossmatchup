@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title> Artale 組隊系統 </title>
+    <title>Artale 組隊系統 - SUMMER公會</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -31,19 +31,22 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
             text-align: center;
         }
-        h1 { color: var(--accent-color); font-size: 2.8em; margin-bottom: 30px; letter-spacing: 2px; }
+        h1 { color: var(--accent-color); font-size: 2.8em; margin-bottom: 20px; letter-spacing: 2px; }
         
+        /* 頂部設定區塊 */
         .setup-section { 
-            display: inline-flex; 
+            display: flex; 
+            flex-wrap: wrap;
             justify-content: center;
-            gap: 25px; 
+            gap: 20px; 
             margin-bottom: 40px; 
             padding: 25px;
             background: rgba(255,255,255,0.03);
             border-radius: 12px;
             border: 1px solid var(--border-color);
         }
-        .setup-item { width: 280px; }
+        .setup-item { width: 220px; }
+        .setup-item.wide { width: 300px; }
 
         label { font-weight: bold; margin-bottom: 12px; display: block; color: var(--accent-color); }
         select, input { 
@@ -56,12 +59,12 @@
             box-sizing: border-box; 
             font-size: 17px; 
             text-align: center;
-            transition: border 0.3s;
         }
         select:focus, input:focus { border-color: var(--accent-color); outline: none; }
 
+        /* 隊伍清單 */
         .team-card { 
-            margin-bottom: 45px; 
+            margin-bottom: 40px; 
             padding: 25px; 
             border: 1px solid var(--border-color); 
             border-radius: 15px; 
@@ -75,16 +78,19 @@
             margin-bottom: 25px; 
             display: inline-block;
             font-weight: bold;
-            font-size: 1.1em;
         }
 
         .member-row { 
             display: grid; 
-            grid-template-columns: 1fr 1fr 1fr; 
-            gap: 15px; 
+            grid-template-columns: 1fr 1.5fr; 
+            gap: 20px; 
             margin-bottom: 15px; 
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
+        /* 建議框 */
         .suggestion-box { 
             background-color: rgba(255,255,255,0.03); 
             border: 2px dashed var(--border-color); 
@@ -100,7 +106,7 @@
             color: #afffcf;
         }
 
-        /* 右下角開發者標註 */
+        /* 右下角標註 */
         .dev-credit {
             position: fixed;
             right: 20px;
@@ -109,7 +115,6 @@
             font-size: 0.9em;
             letter-spacing: 1px;
             font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
 
         @media (max-width: 650px) {
@@ -122,16 +127,16 @@
 <body>
 
 <div class="container">
-    <h1> Artale 組隊系統</h1>
+    <h1>🍁 Artale 組隊系統</h1>
 
     <div class="setup-section">
         <div class="setup-item">
             <label>1. 選擇首領</label>
             <select id="bossSelect" onchange="initTeams()">
                 <option value="">-- 請選擇 --</option>
-                <option value="殘暴炎魔">殘暴炎魔</option>
-                <option value="困難拉圖斯">困難拉圖斯</option>
-                <option value="闇黑龍王">闇黑龍王</option>
+                <option value="殘暴炎魔">殘暴炎魔 (6人)</option>
+                <option value="困難拉圖斯">困難拉圖斯 (6人)</option>
+                <option value="闇黑龍王">闇黑龍王 (12人)</option>
             </select>
         </div>
         <div class="setup-item">
@@ -143,6 +148,10 @@
                 <option value="4">4 組</option>
                 <option value="5">5 組</option>
             </select>
+        </div>
+        <div class="setup-item wide">
+            <label>3. 開打日期時間</label>
+            <input type="text" id="globalTime" placeholder="例如：10/25 20:00" oninput="calculateSuggestion()">
         </div>
     </div>
 
@@ -157,11 +166,18 @@
 
 <script>
     const jobs = [
-        { name: "英雄", buff: "" }, { name: "聖騎士", buff: "" }, { name: "黑騎士", buff: " (火)" },
-        { name: "神射手", buff: " (眼)" }, { name: "箭神", buff: " (眼)" },
-        { name: "鏢賊", buff: " (速)" }, { name: "刀賊", buff: " (速)" },
-        { name: "槍神", buff: "" }, { name: "拳霸", buff: " (極速)" },
-        { name: "火毒", buff: "" }, { name: "冰雷", buff: "" }, { name: "主教", buff: " (祈禱)" }
+        { name: "英雄", type: "physical", buff: "" }, 
+        { name: "聖騎士", type: "physical", buff: "" }, 
+        { name: "黑騎士", type: "physical", buff: " (火)" },
+        { name: "神射手", type: "physical", buff: " (眼)" }, 
+        { name: "箭神", type: "physical", buff: " (眼)" },
+        { name: "鏢賊", type: "physical", buff: " (速)" }, 
+        { name: "刀賊", type: "physical", buff: " (速)" },
+        { name: "槍神", type: "physical", buff: "" }, 
+        { name: "拳霸", type: "physical", buff: " (極速)" },
+        { name: "火毒", type: "magic", buff: "" }, 
+        { name: "冰雷", type: "magic", buff: "" }, 
+        { name: "主教", type: "magic", buff: " (祈禱)" }
     ];
 
     function initTeams() {
@@ -185,11 +201,10 @@
                 groupDiv.innerHTML += `
                     <div class="member-row">
                         <select class="job-select" onchange="calculateSuggestion()">
-                            <option value="">職業</option>
+                            <option value="">選擇職業</option>
                             ${jobs.map(j => `<option value="${j.name}">${j.name}${j.buff}</option>`).join('')}
                         </select>
-                        <input type="text" placeholder="玩家名稱">
-                        <input type="text" class="date-input" placeholder="日期時間" oninput="calculateSuggestion()">
+                        <input type="text" placeholder="成員名稱">
                     </div>
                 `;
             }
@@ -200,28 +215,42 @@
 
     function calculateSuggestion() {
         const boss = document.getElementById('bossSelect').value;
+        const groupCount = parseInt(document.getElementById('teamCountSelect').value);
+        const globalTime = document.getElementById('globalTime').value || "未填寫";
+        
         const selects = document.querySelectorAll('.job-select');
-        const selectedJobs = Array.from(selects).map(s => s.value).filter(v => v);
-        const dateInputs = document.querySelectorAll('.date-input');
+        const selectedJobNames = Array.from(selects).map(s => s.value).filter(v => v);
+        
         const suggestionText = document.getElementById('suggestionText');
         const suggestionBox = document.getElementById('suggestion');
 
-        const groupCount = parseInt(document.getElementById('teamCountSelect').value);
         const totalNeeded = (boss === '闇黑龍王' ? 12 : 6) * groupCount;
+
+        // 計算目前職業屬性
+        const hasHB = selectedJobNames.includes("黑騎士");
+        const hasSE = selectedJobNames.some(j => ["神射手", "箭神"].includes(j));
+        const hasHaste = selectedJobNames.some(j => ["鏢賊", "刀賊"].includes(j));
+        const mageCount = selectedJobNames.filter(j => ["火毒", "冰雷", "主教"].includes(j)).length;
 
         suggestionBox.classList.remove('success-box');
 
-        if (selectedJobs.length >= totalNeeded) {
+        if (selectedJobNames.length >= totalNeeded) {
             suggestionBox.classList.add('success-box');
-            let firstDate = "";
-            for(let d of dateInputs) { if(d.value) { firstDate = d.value; break; } }
-            suggestionText.innerHTML = `<strong>✨ 組隊完成！</strong><br>📅 開打日期：${firstDate || "未填寫"}<br> 請成員備妥萬能藥、藥水與櫻桃派，準時抵達！`;
+            suggestionText.innerHTML = `<strong>✨ 組隊完成！</strong><br>📅 開打日期：${globalTime}<br>💊 請成員備妥萬能藥、藥水與櫻桃派，準時抵達！`;
         } else {
-            let advice = `還差 ${totalNeeded - selectedJobs.length} 人。`;
-            if (!selectedJobs.includes("黑騎士")) advice += " (缺火)";
-            if (!selectedJobs.some(j => ["神射手", "箭神"].includes(j))) advice += " (缺眼)";
-            if (!selectedJobs.some(j => ["鏢賊", "刀賊"].includes(j))) advice += " (缺速)";
-            suggestionText.innerHTML = `💡 組隊建議：${advice}`;
+            let advice = [];
+            if (!hasHB) advice.push("黑騎士(火)");
+            if (!hasSE) advice.push("弓箭手(眼)");
+            if (!hasHaste) advice.push("盜賊(速)");
+            
+            // 法師建議邏輯
+            if (boss === "殘暴炎魔" && mageCount < 1) advice.push("法師(至少1名)");
+            if (boss === "困難拉圖斯" && mageCount < 2) advice.push("法師(至少2名)");
+
+            let remaining = totalNeeded - selectedJobNames.length;
+            let adviceStr = advice.length > 0 ? "建議優先尋找：" + advice.join("、") : "核心職業已齊全！";
+            
+            suggestionText.innerHTML = `💡 組隊進度：還差 ${remaining} 人<br>${adviceStr}`;
         }
     }
 </script>
